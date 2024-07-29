@@ -1,0 +1,184 @@
+Grammar
+
+    0 $accept: CompUnit $end
+
+    1 CompUnit: FuncDef
+
+    2 $@1: ε
+
+    3 FuncDef: T_TYPE T_IDENTIFIER '(' ')' $@1 Block
+
+    4 $@2: ε
+
+    5 Block: '{' $@2 Statement '}'
+
+    6 Statement: T_RETURN T_INTEGER_LITERAL ';'
+
+
+Terminals, with rules where they appear
+
+    $end (0) 0
+    '(' (40) 3
+    ')' (41) 3
+    ';' (59) 6
+    '{' (123) 5
+    '}' (125) 5
+    error (256)
+    T_TYPE (258) 3
+    T_RETURN (259) 6
+    T_IDENTIFIER (260) 3
+    T_INTEGER_LITERAL (261) 6
+
+
+Nonterminals, with rules where they appear
+
+    $accept (12)
+        on left: 0
+    CompUnit (13)
+        on left: 1
+        on right: 0
+    FuncDef (14)
+        on left: 3
+        on right: 1
+    $@1 (15)
+        on left: 2
+        on right: 3
+    Block (16)
+        on left: 5
+        on right: 3
+    $@2 (17)
+        on left: 4
+        on right: 5
+    Statement (18)
+        on left: 6
+        on right: 5
+
+
+State 0
+
+    0 $accept: • CompUnit $end
+
+    T_TYPE  shift, and go to state 1
+
+    CompUnit  go to state 2
+    FuncDef   go to state 3
+
+
+State 1
+
+    3 FuncDef: T_TYPE • T_IDENTIFIER '(' ')' $@1 Block
+
+    T_IDENTIFIER  shift, and go to state 4
+
+
+State 2
+
+    0 $accept: CompUnit • $end
+
+    $end  shift, and go to state 5
+
+
+State 3
+
+    1 CompUnit: FuncDef •
+
+    $default  reduce using rule 1 (CompUnit)
+
+
+State 4
+
+    3 FuncDef: T_TYPE T_IDENTIFIER • '(' ')' $@1 Block
+
+    '('  shift, and go to state 6
+
+
+State 5
+
+    0 $accept: CompUnit $end •
+
+    $default  accept
+
+
+State 6
+
+    3 FuncDef: T_TYPE T_IDENTIFIER '(' • ')' $@1 Block
+
+    ')'  shift, and go to state 7
+
+
+State 7
+
+    3 FuncDef: T_TYPE T_IDENTIFIER '(' ')' • $@1 Block
+
+    $default  reduce using rule 2 ($@1)
+
+    $@1  go to state 8
+
+
+State 8
+
+    3 FuncDef: T_TYPE T_IDENTIFIER '(' ')' $@1 • Block
+
+    '{'  shift, and go to state 9
+
+    Block  go to state 10
+
+
+State 9
+
+    5 Block: '{' • $@2 Statement '}'
+
+    $default  reduce using rule 4 ($@2)
+
+    $@2  go to state 11
+
+
+State 10
+
+    3 FuncDef: T_TYPE T_IDENTIFIER '(' ')' $@1 Block •
+
+    $default  reduce using rule 3 (FuncDef)
+
+
+State 11
+
+    5 Block: '{' $@2 • Statement '}'
+
+    T_RETURN  shift, and go to state 12
+
+    Statement  go to state 13
+
+
+State 12
+
+    6 Statement: T_RETURN • T_INTEGER_LITERAL ';'
+
+    T_INTEGER_LITERAL  shift, and go to state 14
+
+
+State 13
+
+    5 Block: '{' $@2 Statement • '}'
+
+    '}'  shift, and go to state 15
+
+
+State 14
+
+    6 Statement: T_RETURN T_INTEGER_LITERAL • ';'
+
+    ';'  shift, and go to state 16
+
+
+State 15
+
+    5 Block: '{' $@2 Statement '}' •
+
+    $default  reduce using rule 5 (Block)
+
+
+State 16
+
+    6 Statement: T_RETURN T_INTEGER_LITERAL ';' •
+
+    $default  reduce using rule 6 (Statement)
