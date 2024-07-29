@@ -17,9 +17,9 @@ size_t cur_line = 1;
 "main"              { return T_IDENTIFIER; }
 ";"                 { return T_SEMICOLON; }
 "("                 { return T_BRACKET_LEFT_OPEN; }
-")"                 { return T_BRACKET_LEFT_OPEN; }
+")"                 { return T_BRACKET_RIGHT_OPEN; }
 "{"                 { return T_BRACKET_LEFT_CURLY; }
-"}"                 { return T_BRACKET_LEFT_CURLY; }
+"}"                 { return T_BRACKET_RIGHT_CURLY; }
 [0-9]+              { return T_INTEGER_LITERAL; }
 <<EOF>>             { return T_END_OF_FILE; }
 

@@ -635,7 +635,7 @@ YY_RULE_SETUP
 case 6:
 YY_RULE_SETUP
 #line 20 "lexer.l"
-{ return T_BRACKET_LEFT_OPEN; }
+{ return T_BRACKET_RIGHT_OPEN; }
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
@@ -645,7 +645,7 @@ YY_RULE_SETUP
 case 8:
 YY_RULE_SETUP
 #line 22 "lexer.l"
-{ return T_BRACKET_LEFT_CURLY; }
+{ return T_BRACKET_RIGHT_CURLY; }
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
