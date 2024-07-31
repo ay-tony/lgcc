@@ -21,9 +21,9 @@ FuncDef
 : T_TYPE T_IDENTIFIER '(' ')' { printf("define %s @%s() ", $1, $2); } Block
 
 Block
-: '{' { printf("{\n"); indent++; } Statement '}' { printf("}\n"); indent--; }
+: '{' { printf("{\n"); indent++; } Stmt '}' { printf("}\n"); indent--; }
 
-Statement
+Stmt
 : T_RETURN T_INTEGER_LITERAL ';'
   { for(int i = 0; i < indent * 4; i++) putchar(' '); printf("ret i32 %s\n", $2); }
 

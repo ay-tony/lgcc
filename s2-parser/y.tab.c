@@ -174,7 +174,7 @@ enum yysymbol_kind_t
   YYSYMBOL_15_1 = 15,                      /* $@1  */
   YYSYMBOL_Block = 16,                     /* Block  */
   YYSYMBOL_17_2 = 17,                      /* $@2  */
-  YYSYMBOL_Statement = 18                  /* Statement  */
+  YYSYMBOL_Stmt = 18                       /* Stmt  */
 };
 typedef enum yysymbol_kind_t yysymbol_kind_t;
 
@@ -579,7 +579,7 @@ static const char *const yytname[] =
 {
   "\"end of file\"", "error", "\"invalid token\"", "T_TYPE", "T_RETURN",
   "T_IDENTIFIER", "T_INTEGER_LITERAL", "'('", "')'", "'{'", "'}'", "';'",
-  "$accept", "CompUnit", "FuncDef", "$@1", "Block", "$@2", "Statement", YY_NULLPTR
+  "$accept", "CompUnit", "FuncDef", "$@1", "Block", "$@2", "Stmt", YY_NULLPTR
 };
 
 static const char *
@@ -1141,13 +1141,13 @@ yyreduce:
 #line 1142 "y.tab.c"
     break;
 
-  case 6: /* Block: '{' $@2 Statement '}'  */
+  case 6: /* Block: '{' $@2 Stmt '}'  */
 #line 24 "parser.y"
-                                                 { printf("}\n"); indent--; }
+                                            { printf("}\n"); indent--; }
 #line 1148 "y.tab.c"
     break;
 
-  case 7: /* Statement: T_RETURN T_INTEGER_LITERAL ';'  */
+  case 7: /* Stmt: T_RETURN T_INTEGER_LITERAL ';'  */
 #line 28 "parser.y"
   { for(int i = 0; i < indent * 4; i++) putchar(' '); printf("ret i32 %s\n", yyvsp[-1]); }
 #line 1154 "y.tab.c"
