@@ -2,3 +2,18 @@
 node_modules/
 package-lock.json
 package.json
+
+# flex 中间文件
+lex.yy.c
+lex.yy.h
+
+# bison 中间文件
+y.tab.c
+y.tab.h
+y.output
+
+# 生成的文件
+lgcc
+
+# 测试文件
+sample.ll
