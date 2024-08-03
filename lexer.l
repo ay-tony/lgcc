@@ -16,14 +16,14 @@ int32_t atoi_h(const char *);
 "return"            { return T_KEY_RETURN; }
 "int"               { return T_KEY_INT; }
 "main"              { yylval.name = strdup(yytext); return T_IDENTIFIER; }
-[1-9][0-9]+         { yylval.inum = atoi(yytext); return T_INTEGER_LITERAL; }
+([1-9][0-9]*|0)     { yylval.inum = atoi(yytext); return T_INTEGER_LITERAL; }
 0[0-9]+             { yylval.inum = atoi_o(yytext); return T_INTEGER_LITERAL; }
 0[xX][0-9a-fA-F]+   { yylval.inum = atoi_h(yytext); return T_INTEGER_LITERAL; }
 
 \/\/.*              { }
 \/\*[/]*([^*/][/]*|[*]|[^*/])*\*\/ { }
 
-[{}()+\-*/;]        { return yytext[0]; }
+[{}()+\-*/;%]       { return yytext[0]; }
 
 [\n]                { cur_line++; }
 [ \t\r\a]+          { }
