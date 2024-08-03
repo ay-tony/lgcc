@@ -1,35 +1,90 @@
 %{
-#define YYSTYPE char*
+#include <stdint.h>
 #include "lex.yy.h"
 
 void yyerror(const char *s);
+void p(const char *s);
+void pind();
 
-int indent = 0;
+uint32_t indent = 0;
+uint32_t reg_no = 0;
 %}
 
-%token T_TYPE
-%token T_RETURN
-%token T_IDENTIFIER
-%token T_INTEGER_LITERAL
+%union {
+    uint32_t reg;
+    int32_t inum;
+    char *name;
+}
+
+%token T_KEY_RETURN T_KEY_INT
+%token <name> T_IDENTIFIER
+%token <inum> T_INTEGER_LITERAL
+%type <inum> UnaryOp
+%type <reg> PrimaryExp Exp AddExp MulExp UnaryExp
 
 %%
 
-CompUnit
-: FuncDef { }
+CompUnit   
+: FuncDef
 
-FuncDef
-: T_TYPE T_IDENTIFIER '(' ')' { printf("define %s @%s() ", $1, $2); } Block
+FuncDef    
+: { p("define "); reg_no = 0; }
+  FuncType { p(" @"); }
+  Ident { p("() "); }
+  '(' ')' Block
 
-Block
-: '{' { printf("{\n"); indent++; } Stmt '}' { printf("}\n"); indent--; }
+FuncType   
+: T_KEY_INT { p("i32"); }
 
-Stmt
-: T_RETURN T_INTEGER_LITERAL ';'
-  { for(int i = 0; i < indent * 4; i++) putchar(' '); printf("ret i32 %s\n", $2); }
+Ident      
+: T_IDENTIFIER { p($1); }
+
+Block      
+: '{' { p("{\n"); indent++; }
+  Stmt { indent--; }
+  '}' { p("}\n"); }
+
+Stmt       
+: T_KEY_RETURN Exp ';' { pind(); printf("ret i32 %%%d\n", $2); }
+
+Exp        
+: AddExp
+
+AddExp     
+: MulExp
+
+MulExp     
+: UnaryExp
+
+UnaryExp   
+: PrimaryExp { $$ = $1; }
+| UnaryOp UnaryExp {
+    if ($1 == 1) $$ = $2;
+    else {
+      $$ = ++reg_no;
+      pind();
+      printf("%%%d = sub i32 0, %%%d\n", $$, $2);
+    }
+  }
+
+PrimaryExp 
+: '(' Exp ')' { $$ = $2; }
+| T_INTEGER_LITERAL { pind(); printf("%%%d = add i32 0, %d\n", $$ = ++reg_no, $1); }
+
+UnaryOp    
+: '+' { $$ = 1; }
+| '-' { $$ = -1; }
 
 %%
 
 void yyerror(const char *s) {
-    fprintf(stderr, "%s\n", s);
+  fprintf(stderr, "%s\n", s);
 }
 
+void p(const char *s) {
+  printf("%s", s);
+}
+
+void pind() {
+  for (uint32_t i = 0; i < indent; i++) p("    ");
+}
