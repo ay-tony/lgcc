@@ -5,3 +5,10 @@ package.json
 
 # vscode 配置文件
 .vscode
+
+# antlr 相关文件
+.antlr
+antlr_generate/
+
+# 生成的可执行文件
+lgcc
