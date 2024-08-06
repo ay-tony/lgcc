@@ -70,4 +70,10 @@ for _, file in ipairs(os.files("*.c")) do
 
             return lcc_output == clang_output
         end)
+
+        on_clean(function (target) 
+            import("core.project.config")
+            local testdir = path.join(config.buildir(), ".test")
+            os.rm(path.join(testdir, "**"))
+        end)
 end
