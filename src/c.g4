@@ -1,37 +1,23 @@
 grammar c;
 
-program
-: function_definition
-;
+program: function_definition;
 
-function_definition
-: function_type identifier '(' ')' block
-;
+function_definition: function_type identifier '(' ')' block;
 
-function_type
-: 'int'
-;
+function_type: 'int';
 
-identifier
-: 'main'
-;
+identifier: 'main';
 
-block
-: '{' statement '}'
-;
+block: '{' statement '}';
 
-statement
-: 'return' expression ';'
-;
+statement: 'return' expression ';';
 
-expression
-: ('+' | '-') expression
-| expression ('*' | '/' | '%') expression
-| expression ('+' | '-') expression
-| '(' expression ')'
-| literal_integer
-;
+expression: ('+' | '-') expression
+	| expression ('*' | '/' | '%') expression
+	| expression ('+' | '-') expression
+	| '(' expression ')'
+	| literal_integer;
 
-literal_integer
-: '0'
-;
+literal_integer: '0';
+
+Whitespace: [ \n\t\r] -> skip;

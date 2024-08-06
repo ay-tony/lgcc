@@ -20,8 +20,7 @@ using namespace antlrcpp;
 using namespace antlr4;
 
 int main(int, const char **) {
-  ANTLRInputStream input(
-      "🍴 = 🍐 + \"😎\";(((x * π))) * µ + ∰; a + (x * (y ? 0 : 1) + z);");
+  ANTLRInputStream input("int main() { return 0; }");
   cLexer lexer(&input);
   CommonTokenStream tokens(&lexer);
 
