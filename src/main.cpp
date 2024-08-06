@@ -20,15 +20,9 @@ using namespace antlrcpp;
 using namespace antlr4;
 
 int main(int, const char **) {
-  ANTLRInputStream input("int main() { return 0; }");
+  ANTLRInputStream input(std::cin);
   lgccLexer lexer(&input);
   CommonTokenStream tokens(&lexer);
-
-  tokens.fill();
-  for (auto token : tokens.getTokens()) {
-    std::cout << token->toString() << std::endl;
-  }
-
   lgccParser parser(&tokens);
   tree::ParseTree *tree = parser.program();
 
