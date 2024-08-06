@@ -9,6 +9,6 @@ target("antlr")
         syslink = "antlr4-runtime"
     })
 
-    add_files("c.g4")
+    add_files("lgcc.g4")
     set_policy("build.fence", true)
     

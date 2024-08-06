@@ -12,8 +12,8 @@
 
 #include <iostream>
 
-#include "cLexer.h"
-#include "cParser.h"
+#include "lgccLexer.h"
+#include "lgccParser.h"
 #include <antlr4-runtime.h>
 
 using namespace antlrcpp;
@@ -21,7 +21,7 @@ using namespace antlr4;
 
 int main(int, const char **) {
   ANTLRInputStream input("int main() { return 0; }");
-  cLexer lexer(&input);
+  lgccLexer lexer(&input);
   CommonTokenStream tokens(&lexer);
 
   tokens.fill();
@@ -29,7 +29,7 @@ int main(int, const char **) {
     std::cout << token->toString() << std::endl;
   }
 
-  cParser parser(&tokens);
+  lgccParser parser(&tokens);
   tree::ParseTree *tree = parser.program();
 
   std::cout << tree->toStringTree(&parser) << std::endl << std::endl;
