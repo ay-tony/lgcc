@@ -10,6 +10,7 @@
 //  Created by Mike Lischke on 13.03.16.
 //
 
+#include <cstdio>
 #include <iostream>
 
 #include "lgccLexer.h"
@@ -19,7 +20,18 @@
 using namespace antlrcpp;
 using namespace antlr4;
 
-int main(int, const char **) {
+int main(int argc, const char *argv[]) {
+  if (argc == 1) {
+    fprintf(stderr, "Error: no input files!\n");
+    return 1;
+  }
+
+  for (int i = 1; i < argc; i++)
+    if (argv[i][0] != '-')
+      freopen(argv[i], "r", stdin);
+    else
+      freopen(argv[++i], "w", stdout);
+
   ANTLRInputStream input(std::cin);
   lgccLexer lexer(&input);
   CommonTokenStream tokens(&lexer);
