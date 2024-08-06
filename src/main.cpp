@@ -12,15 +12,16 @@
 
 #include <iostream>
 
-#include <antlr4-runtime/antlr4-runtime.h>
 #include "cLexer.h"
 #include "cParser.h"
+#include <antlr4-runtime.h>
 
 using namespace antlrcpp;
 using namespace antlr4;
 
-int main(int , const char **) {
-  ANTLRInputStream input(u8"🍴 = 🍐 + \"😎\";(((x * π))) * µ + ∰; a + (x * (y ? 0 : 1) + z);");
+int main(int, const char **) {
+  ANTLRInputStream input(
+      "🍴 = 🍐 + \"😎\";(((x * π))) * µ + ∰; a + (x * (y ? 0 : 1) + z);");
   cLexer lexer(&input);
   CommonTokenStream tokens(&lexer);
 
@@ -30,7 +31,7 @@ int main(int , const char **) {
   }
 
   cParser parser(&tokens);
-  tree::ParseTree* tree = parser.program();
+  tree::ParseTree *tree = parser.program();
 
   std::cout << tree->toStringTree(&parser) << std::endl << std::endl;
 

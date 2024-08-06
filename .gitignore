@@ -3,12 +3,10 @@ node_modules/
 package-lock.json
 package.json
 
-# vscode 配置文件
+# 配置文件
 .vscode
-
-# antlr 相关文件
 .antlr
-antlr_generate/
+.xmake
 
-# 生成的可执行文件
-lgcc
+# 生成目录
+build/
