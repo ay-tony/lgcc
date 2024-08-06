@@ -5,24 +5,24 @@ rule("antlr4")
     before_buildcmd_file(function (target, batchcmds, sourcefile, opt)
         -- 添加 antlr4 c++ 运行时头文件
         local sysincludedir = target:extraconf("rules", "antlr4", "sysincludedir") 
-        target:add("sysincludedirs", sysincludedir)
+        target:add("sysincludedirs", sysincludedir, { public = true })
 
         -- 添加 antlr4 c++ 运行时库
         local syslink = target:extraconf("rules", "antlr4", "syslink")
-        target:add("syslinks", syslink)
+        target:add("syslinks", syslink, { public = true })
 
         -- 检查并获取 antlr4 命令
         import("lib.detect.find_tool")
         local antlr4 = assert(
-            find_tool("antlr4", {check = function (tool) 
+            find_tool("antlr4", { check = function (tool) 
                 os.run("%s", tool)
-            end}),
+            end }),
             "antlr4 not found!")
 
         -- 生成 .cpp 和 .h 文件的临时存放目录，并加入头文件搜索
         local gendir = path.absolute(path.join(target:autogendir(), "rules", "antlr4"))
         batchcmds:mkdir(gendir)
-        target:add("includedirs", gendir)
+        target:add("includedirs", gendir, { public = true })
 
         -- 开始生成 .cpp 和 .h 文件
         batchcmds:show_progress(opt.progress, "${color.build.object}compiling.antlr4 %s", sourcefile)
