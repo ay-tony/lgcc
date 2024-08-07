@@ -1,23 +1,27 @@
 grammar lgcc;
 
-program: function_definition;
+program: function_definition EOF;
 
-function_definition: function_type identifier '(' ')' block;
+function_definition: function_type IDENTIFIER '(' ')' block;
 
-function_type: 'int';
+function_type: 'int' # KeyInt;
 
-identifier: 'main';
+block: '{' statement '}' # Statements;
 
-block: '{' statement '}';
+statement: 'return' LITERAL_INTEGER ';' # ReturnStatement;
 
-statement: 'return' expression ';';
+expression: (op = '+' | op = '-') expression								# UnaryExpression
+	| lhs = expression (op = '*' | op = '/' | op = '%') rhs = expression	# BinaryExpression
+	| lhs = expression (op = '+' | op = '-') rhs = expression				# BinaryExpression
+	| '(' expression ')'													# BraceExpression
+	| LITERAL_INTEGER														# IntegerExpression;
 
-expression: ('+' | '-') expression
-	| expression ('*' | '/' | '%') expression
-	| expression ('+' | '-') expression
-	| '(' expression ')'
-	| literal_integer;
+IDENTIFIER: 'main';
 
-literal_integer: '0';
+LITERAL_INTEGER:
+	'0'
+	| ([1-9][0-9]*)
+	| ('0' [1-7][0-7]*)
+	| ('0' [xX][0-9a-fA-F]*);
 
-Whitespace: [ \n\t\r] -> skip;
+WHITESPACE: [ \n\t\r] -> skip;

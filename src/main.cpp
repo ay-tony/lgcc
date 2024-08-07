@@ -1,29 +1,19 @@
-/* Copyright (c) 2012-2017 The ANTLR Project. All rights reserved.
- * Use of this file is governed by the BSD 3-clause license that
- * can be found in the LICENSE.txt file in the project root.
- */
-
-//
-//  main.cpp
-//  antlr4-cpp-demo
-//
-//  Created by Mike Lischke on 13.03.16.
-//
-
+#include <antlr4-runtime.h>
 #include <cstdio>
 #include <iostream>
 
 #include "lgccLexer.h"
 #include "lgccParser.h"
-#include <antlr4-runtime.h>
+#include "visitor.h"
 
 using namespace antlrcpp;
 using namespace antlr4;
 
 int main(int argc, const char *argv[]) {
+  // 参数处理
   if (argc == 1) {
     fprintf(stderr, "Error: no input files!\n");
-    return 1;
+    return -1;
   }
 
   for (int i = 1; i < argc; i++)
@@ -37,8 +27,8 @@ int main(int argc, const char *argv[]) {
   CommonTokenStream tokens(&lexer);
   lgccParser parser(&tokens);
   tree::ParseTree *tree = parser.program();
+  visitor visitor;
+  visitor.visit(tree);
 
-  std::cout << tree->toStringTree(&parser) << std::endl << std::endl;
-
-  return 0;
+  return lexer.getNumberOfSyntaxErrors() + parser.getNumberOfSyntaxErrors();
 }
