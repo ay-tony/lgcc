@@ -27,8 +27,8 @@ for _, file in ipairs(os.files("*.c")) do
             local clang_failed = false
             try {
                 function ()
-                    os.execv(lgcc, { opt.runargs, "-o", lgcc_mid })
-                    os.execv(clang, { lgcc_mid, "-o", lgcc_out })
+                    os.runv(lgcc, { opt.runargs, "-o", lgcc_mid })
+                    os.runv(clang, { lgcc_mid, "-o", lgcc_out })
                 end,
                 catch { function () lgcc_failed = true end }
             }
@@ -46,28 +46,33 @@ for _, file in ipairs(os.files("*.c")) do
             end
 
             -- 测试编译后的程序能否正常运行
-            local lgcc_output
-            local clang_output
-            try {
-                function ()
-                    lgcc_output, _ = os.iorunv(lgcc_out)
-                end,
-                catch { function () lgcc_failed = true end }
-            } 
-            try {
-                function ()
-                    clang_output, _ = os.iorunv(clang_out)
-                end,
-                catch { function () clang_failed = true end }
-            } 
+            local outf = os.tmpfile()
+            local errf = os.tmpfile()
 
-            if (lgcc_failed and clang_failed) then
-                return true
-            elseif (lgcc_failed ~= clang_failed) then
-                return false
-            end
+            local lgcc_return
+            try {
+                function()
+                    lgcc_return, _ = os.execv(lgcc_out, {}, { stdout = outf, stderr = errf })
+                end
+            }
+            local lgcc_stdout = io.readfile(outf)
+            local lgcc_stderr = io.readfile(errf)
 
-            return lgcc_output == clang_output
+            local clang_return
+            try {
+                function()
+                    clang_return, _ = os.execv(clang_out, {}, { stdout = outf, stderr = errf })
+                end
+            }
+            local clang_stdout = io.readfile(outf)
+            local clang_stderr = io.readfile(errf)
+
+            os.rm(outf)
+            os.rm(errf)
+
+            return (lgcc_stdout == clang_stdout) and
+                   (lgcc_stderr == clang_stderr) and
+                   (lgcc_return == clang_return)
         end)
 
         on_clean(function (target) 
