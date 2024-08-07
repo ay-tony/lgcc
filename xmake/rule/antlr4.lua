@@ -2,7 +2,7 @@ rule("antlr4")
     add_deps("c++")
     set_extensions(".g4")
 
-    before_buildcmd_file(function (target, batchcmds, sourcefile, opt)
+    on_load(function (target)
         -- 添加 antlr4 c++ 运行时头文件
         local sysincludedir = target:extraconf("rules", "antlr4", "sysincludedir") 
         target:add("sysincludedirs", sysincludedir, { public = true })
@@ -21,36 +21,27 @@ rule("antlr4")
 
         -- 生成 .cpp 和 .h 文件的临时存放目录，并加入头文件搜索
         local gendir = path.absolute(path.join(target:autogendir(), "rules", "antlr4"))
-        batchcmds:mkdir(gendir)
+        os.mkdir(gendir)
         target:add("includedirs", gendir, { public = true })
 
-        -- 开始生成 .cpp 和 .h 文件
-        batchcmds:show_progress(opt.progress, "${color.build.object}compiling.antlr4 %s", sourcefile)
-        os.cd(path.absolute(path.directory(sourcefile)))
-        batchcmds:vrunv(antlr4.program, {
-            "-Dlanguage=Cpp",
-            "-o",
-            gendir,
-            path.absolute(path.filename(sourcefile))})
-        os.cd("-")
+        -- 遍历所有 .g4 文件
+        for _, sourcefile in ipairs(target:get("files")) do
+            if (path.extension(sourcefile) == ".g4") then
+                -- 开始生成 .cpp 和 .h 文件
+                -- batchcmds:show_progress(opt.progress, "${color.build.object}compiling.antlr4 %s", sourcefile)
+                os.cd(path.absolute(path.directory(sourcefile)))
+                os.vrunv(antlr4.program, {
+                    "-visitor",
+                    "-Dlanguage=Cpp",
+                    "-o",
+                    gendir,
+                    path.absolute(path.filename(sourcefile))})
+                os.cd("-")
 
-        -- 因为异步编译，提前准备生成的 .cpp 文件列表
-        local genfiles = {
-            path.join(gendir, path.basename(sourcefile) .. "Lexer.cpp"),
-            path.join(gendir, path.basename(sourcefile) .. "Parser.cpp"),
-            path.join(gendir, path.basename(sourcefile) .. "Listener.cpp"),
-            path.join(gendir, path.basename(sourcefile) .. "BaseListener.cpp")
-        }
-
-        -- 编译生成的 .cpp 文件
-        for _, genfile in ipairs(genfiles) do
-            local objectfile = target:objectfile(genfile)   -- 对应的 .o 文件
-            batchcmds:show_progress(opt.progress, "${color.build.object}compiling.antlr4 %s", genfile)
-            batchcmds:compile(genfile, objectfile)          -- 编译
-            table.insert(target:objectfiles(), objectfile)  -- 把 .o 文件加入链接表
-            batchcmds:set_depmtime(os.mtime(objectfile))    -- 设置文件修改时间，判定依赖要用
+                -- 添加生成的 .cpp 文件到源文件
+                for _, genfile in ipairs(os.files(path.join(gendir, "*.cpp"))) do
+                    target:add("files", genfile)
+                end
+            end
         end
-
-        batchcmds:add_depfiles(sourcefile)  -- 添加对 .g4 源文件 的依赖
-        batchcmds:set_depcache(target:dependfile(objectfile))
     end)
