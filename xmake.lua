@@ -5,6 +5,6 @@ set_xmakever("2.8.5")
 add_rules("mode.debug", "mode.release")
 
 set_languages("cxxlatest")
-set_warnings("everything")
+set_warnings("all") -- TODO: 修 bug 并改成 everything
 
 includes("src", "test", "xmake")
