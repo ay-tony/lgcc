@@ -25,3 +25,5 @@ LITERAL_INTEGER:
 	| ('0' [xX][0-9a-fA-F]*);
 
 WHITESPACE: [ \n\t\r] -> skip;
+COMMENT_SINGLE_LINE: '//' .*? '\n' -> skip;
+COMMENT_MULTI_LINE: '/*' .*? '*/' -> skip;
