@@ -17,6 +17,7 @@
 class visitor : public lgccBaseVisitor {
 private:
   size_t m_indent = 0;
+  size_t m_varcnt = 0;
 
   void pd() {
     for (size_t i = 0; i < m_indent; i++)
@@ -64,30 +65,77 @@ public:
     return defaultResult();
   }
 
-  std::any
-  visitReturnStatement(lgccParser::ReturnStatementContext *ctx) override {
-    auto val = std::any_cast<std::int32_t>(visit(ctx->LITERAL_INTEGER()));
+  virtual std::any visitReturnExpressionStatement(
+      lgccParser::ReturnExpressionStatementContext *ctx) override {
+    auto val = std::any_cast<std::uint32_t>(visit(ctx->expression()));
+    pl("ret i32 %{}", val);
+    return defaultResult();
+  }
+
+  virtual std::any visitReturnConstExpressionStatement(
+      lgccParser::ReturnConstExpressionStatementContext *ctx) override {
+    auto val = std::any_cast<std::int32_t>(visit(ctx->const_expression()));
     pl("ret i32 {}", val);
     return defaultResult();
   }
 
-  std::any
+  virtual std::any visitUnaryConstExpression(
+      lgccParser::UnaryConstExpressionContext *ctx) override {
+    if (ctx->op->getText() == "+")
+      return std::any_cast<int32_t>(visit(ctx->const_expression()));
+    else
+      return -std::any_cast<int32_t>(visit(ctx->const_expression()));
+  }
+
+  virtual std::any visitBraceConstExpression(
+      lgccParser::BraceConstExpressionContext *ctx) override {
+    return visit(ctx->const_expression());
+  }
+
+  virtual std::any visitIntegerConstExpression(
+      lgccParser::IntegerConstExpressionContext *ctx) override {
+    return visit(ctx->LITERAL_INTEGER());
+  }
+
+  virtual std::any visitBinaryConstExpression(
+      lgccParser::BinaryConstExpressionContext *ctx) override {
+
+    switch (ctx->op->getText()[0]) {
+    case '+':
+      return std::any_cast<int32_t>(visit(ctx->lhs)) +
+             std::any_cast<int32_t>(visit(ctx->rhs));
+    case '-':
+      return std::any_cast<int32_t>(visit(ctx->lhs)) -
+             std::any_cast<int32_t>(visit(ctx->rhs));
+    case '*':
+      return std::any_cast<int32_t>(visit(ctx->lhs)) *
+             std::any_cast<int32_t>(visit(ctx->rhs));
+    case '/':
+      return std::any_cast<int32_t>(visit(ctx->lhs)) /
+             std::any_cast<int32_t>(visit(ctx->rhs));
+    default:
+      return std::any_cast<int32_t>(visit(ctx->lhs)) %
+             std::any_cast<int32_t>(visit(ctx->rhs));
+    }
+  }
+
+  virtual std::any
   visitBinaryExpression(lgccParser::BinaryExpressionContext *ctx) override {
     return visitChildren(ctx);
   }
 
-  std::any
+  virtual std::any
   visitUnaryExpression(lgccParser::UnaryExpressionContext *ctx) override {
     return visitChildren(ctx);
   }
 
-  std::any
-  visitIntegerExpression(lgccParser::IntegerExpressionContext *ctx) override {
+  virtual std::any
+  visitBraceExpression(lgccParser::BraceExpressionContext *ctx) override {
     return visitChildren(ctx);
   }
 
-  std::any
-  visitBraceExpression(lgccParser::BraceExpressionContext *ctx) override {
+  virtual std::any visitConstExpressionExpression(
+      lgccParser::ConstExpressionExpressionContext *ctx) override {
     return visitChildren(ctx);
   }
 
