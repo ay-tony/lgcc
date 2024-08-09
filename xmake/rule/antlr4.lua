@@ -3,18 +3,13 @@ rule("antlr4")
     set_extensions(".g4")
 
     on_load(function (target)
-        -- 添加相关选项，并获取到对应值
-        import("core.base.option")
-        target:add("options", "antlr4-include-directory")
-        target:add("options", "antlr4-lib-name")
-        local sysincludedir = option.get("antlr4-include-directory")
-        local syslink = option.get("antlr4-lib-name")
-
         -- 添加 antlr4 c++ 运行时头文件
+        local sysincludedir = target:extraconf("rules", "antlr4", "sysincludedir") 
         target:add("sysincludedirs", sysincludedir, { public = true })
 
         -- 添加 antlr4 c++ 运行时库
-       target:add("syslinks", syslink, { public = true })
+        local syslink = target:extraconf("rules", "antlr4", "syslink")
+        target:add("syslinks", syslink, { public = true })
 
         -- 检查并获取 antlr4 命令
         import("lib.detect.find_tool")
@@ -51,8 +46,3 @@ rule("antlr4")
         end
     end)
 
-option("antlr4-include-directory")
-    set_default("/usr/include/antlr4-runtime/") 
-
-option("antlr4-lib-name")
-    set_default("antlr4-runtime") 
