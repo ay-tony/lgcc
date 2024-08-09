@@ -8,10 +8,9 @@ target("antlr")
 
 target("antlr-generate")
     set_kind("object")
-    add_rules("antlr4", {
-        sysincludedir = "/usr/include/antlr4-runtime",
-        syslink = "antlr4-runtime"
-    })
+
+    add_rules("antlr4")
 
     add_files("lgcc.g4")
     set_policy("build.fence", true)
+

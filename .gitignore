@@ -8,5 +8,11 @@ package.json
 .antlr
 .xmake
 
+# xmake 生成的编译命令文件
+compile_commands.json
+
+# nvim 缓存
+.cache
+
 # 生成目录
 build/
