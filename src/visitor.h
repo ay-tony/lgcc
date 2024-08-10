@@ -17,7 +17,6 @@
 class visitor : public lgccBaseVisitor {
 private:
   size_t m_indent = 0;
-  size_t m_varcnt = 0;
 
   void pd() {
     for (size_t i = 0; i < m_indent; i++)
