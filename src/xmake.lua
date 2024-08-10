@@ -1,5 +1,6 @@
 target("lgcc")
     add_deps("antlr")
+    add_packages("argparse")
     add_files("main.cpp")
 
 target("antlr")

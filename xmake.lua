@@ -7,4 +7,6 @@ add_rules("mode.debug", "mode.release")
 set_languages("cxxlatest")
 set_warnings("all") -- TODO: 修 bug 并改成 everything
 
+add_requires("argparse")
+
 includes("src", "test", "xmake")
