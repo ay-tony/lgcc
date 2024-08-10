@@ -8,9 +8,6 @@
 #include "lgccParser.h"
 #include "visitor.h"
 
-using namespace antlrcpp;
-using namespace antlr4;
-
 int main(int argc, char *argv[]) {
   // TODO: 从 xmake 配置读取并写到这里，修改默认参数
   argparse::ArgumentParser program("lgcc", "0.1.0");
@@ -32,11 +29,11 @@ int main(int argc, char *argv[]) {
   freopen(program.get<std::vector<std::string>>("source_files")[0].c_str(), "r",
           stdin);
 
-  ANTLRInputStream input(std::cin);
+  antlr4::ANTLRInputStream input(std::cin);
   lgccLexer lexer(&input);
-  CommonTokenStream tokens(&lexer);
+  antlr4::CommonTokenStream tokens(&lexer);
   lgccParser parser(&tokens);
-  tree::ParseTree *tree = parser.program();
+  antlr4::tree::ParseTree *tree = parser.program();
   visitor visitor;
   visitor.visit(tree);
 
