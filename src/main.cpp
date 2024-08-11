@@ -9,6 +9,7 @@
 
 #include "lgccLexer.h"
 #include "lgccParser.h"
+#include "symbol.hpp"
 #include "visitor.h"
 
 class lgcc_error_listener : public antlr4::BaseErrorListener {
