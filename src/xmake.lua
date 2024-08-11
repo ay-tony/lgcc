@@ -1,6 +1,7 @@
 target("lgcc")
     add_deps("antlr")
     add_packages("argparse")
+    add_packages("spdlog")
     add_files("main.cpp")
 
 target("antlr")

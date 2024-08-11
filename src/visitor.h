@@ -1,22 +1,25 @@
 #ifndef VISITOR_H
 #define VISITOR_H
 
-#include "lgccBaseVisitor.h"
-#include "lgccParser.h"
-#include <Parser.h>
 #include <any>
 #include <cstddef>
 #include <cstdint>
 #include <format>
 #include <ostream>
 #include <string>
+
+#include <Parser.h>
 #include <tree/TerminalNode.h>
+
+#include "lgccBaseVisitor.h"
+#include "lgccParser.h"
 
 // TODO: 将定义移到 .cpp 文件中
 
 class visitor : public lgccBaseVisitor {
 private:
   size_t m_indent = 0;
+  std::ofstream m_outfile;
 
   void pd() {
     for (size_t i = 0; i < m_indent; i++)
@@ -25,7 +28,7 @@ private:
 
   template <class... Args>
   void p(std::format_string<Args...> fmt, Args &&...args) {
-    std::cout << std::format(fmt, args...);
+    m_outfile << std::format(fmt, args...);
   }
 
   template <class... Args>
@@ -36,6 +39,12 @@ private:
   }
 
 public:
+  visitor(const std::string &outf) {
+    m_outfile.open(outf, std::ios::out | std::ios::trunc);
+  }
+
+  ~visitor() { m_outfile.close(); }
+
   std::any visitProgram(lgccParser::ProgramContext *ctx) override {
     return visitChildren(ctx);
   }

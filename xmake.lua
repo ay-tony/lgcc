@@ -8,5 +8,6 @@ set_languages("cxxlatest")
 set_warnings("all") -- TODO: 修 bug 并改成 everything
 
 add_requires("argparse")
+add_requires("spdlog")
 
 includes("src", "test", "xmake")
