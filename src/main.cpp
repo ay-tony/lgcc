@@ -12,12 +12,17 @@
 #include "visitor.h"
 
 class lgcc_error_listener : public antlr4::BaseErrorListener {
+  std::string m_file_name;
+
   void syntaxError(antlr4::Recognizer *recognizer,
                    antlr4::Token *offendingSymbol, size_t line,
                    size_t charPositionInLine, const std::string &msg,
                    std::exception_ptr e) override {
-    spdlog::error(":{}:{}: {}", line, charPositionInLine, msg);
+    spdlog::error("{}:{}:{}: {}", m_file_name, line, charPositionInLine, msg);
   }
+
+public:
+  lgcc_error_listener(std::string file_name) : m_file_name(file_name) {};
 };
 
 // TODO: 支持 lgcc 日志功能
@@ -58,7 +63,7 @@ int main(int argc, char *argv[]) {
   // 语法分析
   lgccParser parser(&tokens);
   parser.removeErrorListeners();
-  lgcc_error_listener error_listener;
+  lgcc_error_listener error_listener(source_file);
   parser.addErrorListener(&error_listener);
   antlr4::tree::ParseTree *tree = parser.program();
   visitor visitor(out_file);
