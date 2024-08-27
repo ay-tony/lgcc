@@ -26,7 +26,7 @@ public:
   void insert(const std::string &name, const symbol &sym) {
     if (symbol_table.contains(name))
       throw false; // TODO: 规范抛出异常
-    symbol_table.emplace(std::string(name), new symbol(sym));
+    symbol_table.emplace(name, new symbol(sym));
   }
 
   const symbol &resolve(const std::string &name) {
