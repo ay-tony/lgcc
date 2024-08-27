@@ -9,7 +9,7 @@ function_type: 'int' # FunctionTypeInt;
 block: '{' statement* '}';
 
 statement:
-    return_statement # ReturnStatement
+    return_statement                # ReturnStatement
     | variable_definition_statement # VariableDefinitionStatement;
 
 return_statement:
@@ -20,7 +20,8 @@ variable_definition_statement:
     variable_type single_variable_definition (',' single_variable_definition)* ';';
 
 variable_type:
-    'int' # VariableTypeInt
+    'int'    # VariableTypeInt
+    | 'float' # VariableTypeFloat;
 
 single_variable_definition:
     IDENTIFIER                        # NoInitializeVariableDefinition
