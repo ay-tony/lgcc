@@ -9,8 +9,7 @@
 
 #include "lgccLexer.h"
 #include "lgccParser.h"
-#include "symbol.hpp"
-#include "visitor.h"
+#include "visitor.hpp"
 
 class lgcc_error_listener : public antlr4::BaseErrorListener {
   std::string m_file_name;
@@ -67,7 +66,7 @@ int main(int argc, char *argv[]) {
   lgcc_error_listener error_listener(source_file);
   parser.addErrorListener(&error_listener);
   antlr4::tree::ParseTree *tree = parser.program();
-  visitor visitor(out_file);
+  visitor_t visitor(out_file);
   visitor.visit(tree);
 
   return lexer.getNumberOfSyntaxErrors() + parser.getNumberOfSyntaxErrors();

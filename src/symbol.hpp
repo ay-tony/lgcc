@@ -1,39 +1,42 @@
 #ifndef SYMBOL_HPP
 #define SYMBOL_HPP
 
+#include <concepts>
 #include <map>
 #include <memory>
 #include <string>
 
-class symbol {
+class variable_t {
 private:
-  std::string m_name;
+  uint32_t m_ir_cnt;
 
 public:
-  symbol(const std::string &name) : m_name(name) {}
+  variable_t(uint32_t ir_cnt) : m_ir_cnt(ir_cnt) {}
 
-  std::string get_name() { return m_name; }
+  uint32_t get_ir_cnt() const { return m_ir_cnt; }
 };
 
-class scope {
+class scope_t {
 private:
-  std::map<std::string, std::unique_ptr<symbol>> symbol_table;
-  scope *m_father{nullptr};
+  std::map<std::string, std::unique_ptr<variable_t>> variable_table;
+  scope_t *m_father{nullptr};
 
 public:
-  scope(scope *father = nullptr) : m_father(father) {}
+  scope_t(scope_t *father = nullptr) : m_father(father) {}
 
-  void insert(const std::string &name, const symbol &sym) {
-    if (symbol_table.contains(name))
+  template <class T>
+    requires std::derived_from<T, variable_t>
+  void insert_variable(const std::string &name, const T &sym) {
+    if (variable_table.contains(name))
       throw false; // TODO: 规范抛出异常
-    symbol_table.emplace(name, new symbol(sym));
+    variable_table.emplace(name, new T(sym));
   }
 
-  const symbol &resolve(const std::string &name) {
-    if (auto it = symbol_table.find(name); it != symbol_table.end())
+  const variable_t &resolve_variable(const std::string &name) {
+    if (auto it = variable_table.find(name); it != variable_table.end())
       return *(it->second);
     if (m_father)
-      return m_father->resolve(name);
+      return m_father->resolve_variable(name);
     throw false; // TODO: 规范抛出异常
   }
 };

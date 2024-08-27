@@ -4,13 +4,28 @@ program: function_definition EOF;
 
 function_definition: function_type IDENTIFIER '(' ')' block;
 
-function_type: 'int' # KeyInt;
+function_type: 'int' # FunctionTypeInt;
 
-block: '{' statement '}' # Statements;
+block: '{' statement* '}';
 
 statement:
+    return_statement # ReturnStatement
+    | variable_definition_statement # VariableDefinitionStatement;
+
+return_statement:
     'return' const_expression ';' # ReturnConstExpressionStatement
     | 'return' expression ';'     # ReturnExpressionStatement;
+
+variable_definition_statement:
+    variable_type single_variable_definition (',' single_variable_definition)* ';';
+
+variable_type:
+    'int' # VariableTypeInt
+
+single_variable_definition:
+    IDENTIFIER                        # NoInitializeVariableDefinition
+    | IDENTIFIER '=' const_expression # ConstExpressionInitializeVariableDefinition
+    | IDENTIFIER '=' expression       # ExpressionInitializeVariableDefinition;
 
 const_expression:
     (op = '+' | op = '-') const_expression                                           # UnaryConstExpression
@@ -24,9 +39,10 @@ expression:
     | lhs = expression (op = '*' | op = '/' | op = '%') rhs = expression # BinaryExpression
     | lhs = expression (op = '+' | op = '-') rhs = expression            # BinaryExpression
     | '(' expression ')'                                                 # BraceExpression
-    | const_expression                                                   # ConstExpressionExpression;
+    | const_expression                                                   # ConstExpressionExpression
+    | IDENTIFIER                                                         # IdentifierExpression;
 
-IDENTIFIER: 'main';
+IDENTIFIER: [a-zA-Z_][0-9a-zA-Z_]*;
 
 LITERAL_INTEGER:
     '0'
