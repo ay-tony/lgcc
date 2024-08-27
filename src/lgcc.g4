@@ -37,3 +37,4 @@ LITERAL_INTEGER:
 WHITESPACE: [ \n\t\r] -> skip;
 COMMENT_SINGLE_LINE: '//' .*? '\n' -> skip;
 COMMENT_MULTI_LINE: '/*' .*? '*/' -> skip;
+
