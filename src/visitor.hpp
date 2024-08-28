@@ -53,7 +53,7 @@ private:
     if (val.type() == typeid(std::int32_t))
       return std::to_string(std::any_cast<std::int32_t>(val));
     else if (val.type() == typeid(float))
-      return std::to_string(std::any_cast<float>(val));
+      return std::to_string(std::any_cast<float>(val)) + ".0";
     throw; // TODO
   }
 
@@ -350,16 +350,16 @@ public:
     case variable_t::TYPE::FLOAT:
       switch (ctx->op->getText()[0]) {
       case '+':
-        pl("%{} = fadd i32 %{}, %{}", cur_ir_cnt, new_ir_cnt1, new_ir_cnt2);
+        pl("%{} = fadd float %{}, %{}", cur_ir_cnt, new_ir_cnt1, new_ir_cnt2);
         break;
       case '-':
-        pl("%{} = fsub i32 %{}, %{}", cur_ir_cnt, new_ir_cnt1, new_ir_cnt2);
+        pl("%{} = fsub float %{}, %{}", cur_ir_cnt, new_ir_cnt1, new_ir_cnt2);
         break;
       case '*':
-        pl("%{} = fmul i32 %{}, %{}", cur_ir_cnt, new_ir_cnt1, new_ir_cnt2);
+        pl("%{} = fmul float %{}, %{}", cur_ir_cnt, new_ir_cnt1, new_ir_cnt2);
         break;
       case '/':
-        pl("%{} = fdiv i32 %{}, %{}", cur_ir_cnt, new_ir_cnt1, new_ir_cnt2);
+        pl("%{} = fdiv float %{}, %{}", cur_ir_cnt, new_ir_cnt1, new_ir_cnt2);
         break;
       default:
         throw; // TODO: 规范化错误处理
@@ -402,7 +402,7 @@ public:
       break;
 
     case variable_t::TYPE::FLOAT:
-      pl("%{} = load i32, ptr %{}", cur_ir_cnt, ir_cnt);
+      pl("%{} = load float, ptr %{}", cur_ir_cnt, ir_cnt);
       break;
     }
     return expression_t(cur_ir_cnt, type);
