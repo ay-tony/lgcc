@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
   // 定义参数
   // TODO: 从 xmake 配置读取并写到这里，修改默认参数
   argparse::ArgumentParser program("lgcc", "0.1.0");
-  program.add_argument("-o", "--output").help("the file to generate").default_value("a.out");
+  program.add_argument("-o", "--output").help("the file to generate").default_value("a.ll");
   program.add_argument("files");
 
   // 用 argparse 解析参数

@@ -4,7 +4,7 @@ program: function_definition EOF;
 
 function_definition: function_type IDENTIFIER '(' ')' block;
 
-function_type: 'int' # FunctionTypeInt;
+function_type: 'int' | 'void';
 
 block: '{' statement* '}';
 
@@ -19,9 +19,7 @@ return_statement:
 variable_definition_statement:
     variable_type single_variable_definition (',' single_variable_definition)* ';';
 
-variable_type:
-    'int'    # VariableTypeInt
-    | 'float' # VariableTypeFloat;
+variable_type: 'int' | 'float' ;
 
 single_variable_definition:
     IDENTIFIER                        # NoInitializeVariableDefinition
