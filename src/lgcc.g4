@@ -19,7 +19,7 @@ return_statement:
 variable_definition_statement:
     variable_type single_variable_definition (',' single_variable_definition)* ';';
 
-variable_type: 'int' | 'float' ;
+variable_type: 'int' | 'float';
 
 single_variable_definition:
     IDENTIFIER                        # NoInitializeVariableDefinition
@@ -31,7 +31,8 @@ const_expression:
     | lhs = const_expression (op = '*' | op = '/' | op = '%') rhs = const_expression # BinaryConstExpression
     | lhs = const_expression (op = '+' | op = '-') rhs = const_expression            # BinaryConstExpression
     | '(' const_expression ')'                                                       # BraceConstExpression
-    | LITERAL_INTEGER                                                                # IntegerConstExpression;
+    | LITERAL_INTEGER                                                                # IntegerConstExpression
+    | LITERAL_FLOAT                                                                  # FloatConstExpression;
 
 expression:
     (op = '+' | op = '-') expression                                     # UnaryExpression
@@ -48,6 +49,9 @@ LITERAL_INTEGER:
     | ([1-9][0-9]*)
     | ('0' [1-7][0-7]*)
     | ('0' [xX][0-9a-fA-F]*);
+
+LITERAL_FLOAT:
+    (([0-9]* '.' [0-9]+) | [0-9]+ '.') ([eE] [+-]? [0-9]+)?;
 
 WHITESPACE: [ \n\t\r] -> skip;
 COMMENT_SINGLE_LINE: '//' .*? '\n' -> skip;

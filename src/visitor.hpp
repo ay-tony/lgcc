@@ -53,7 +53,7 @@ private:
     if (val.type() == typeid(std::int32_t))
       return std::to_string(std::any_cast<std::int32_t>(val));
     else if (val.type() == typeid(float))
-      return std::to_string(std::any_cast<float>(val)) + ".0";
+      return std::format("{:e}", std::any_cast<float>(val));
     throw; // TODO
   }
 
@@ -248,6 +248,11 @@ public:
     return const_expression_t(val, variable_t::TYPE::INT32);
   }
 
+  std::any visitFloatConstExpression(lgccParser::FloatConstExpressionContext *ctx) override {
+    auto val = std::any_cast<float>(visit(ctx->LITERAL_FLOAT()));
+    return const_expression_t(val, variable_t::TYPE::FLOAT);
+  }
+
   std::any visitBinaryConstExpression(lgccParser::BinaryConstExpressionContext *ctx) override {
     auto [val1, type1]{std::any_cast<const_expression_t>(visit(ctx->lhs))};
     auto [val2, type2]{std::any_cast<const_expression_t>(visit(ctx->rhs))};
@@ -412,6 +417,8 @@ public:
     switch (ctx->getSymbol()->getType()) {
     case lgccParser::LITERAL_INTEGER:
       return static_cast<std::int32_t>(std::stoi(ctx->getText(), nullptr, 0));
+    case lgccParser::LITERAL_FLOAT:
+      return static_cast<float>(std::stof(ctx->getText()));
     case lgccParser::IDENTIFIER:
       return ctx->getText();
     default:
