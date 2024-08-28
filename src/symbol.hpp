@@ -36,12 +36,14 @@ public:
 private:
   ir_cnt_t m_ir_cnt;
   TYPE m_type;
+  bool m_isconst;
 
 public:
-  variable_t(std::uint32_t ir_cnt, TYPE type) : m_ir_cnt(ir_cnt), m_type(type) {}
+  variable_t(std::uint32_t ir_cnt, TYPE type, bool isconst) : m_ir_cnt(ir_cnt), m_type(type), m_isconst(isconst) {}
 
-  ir_cnt_t get_ir_cnt() const { return m_ir_cnt; }
-  TYPE get_type() const { return m_type; }
+  ir_cnt_t ir_cnt() const { return m_ir_cnt; }
+  TYPE type() const { return m_type; }
+  bool is_const() const { return m_isconst; }
 };
 
 class function_t {

@@ -9,8 +9,9 @@ function_type: 'int' | 'void';
 block: '{' statement* '}';
 
 statement:
-    return_statement                # ReturnStatement
-    | variable_definition_statement # VariableDefinitionStatement;
+    return_statement                      # ReturnStatement
+    | variable_definition_statement       # VariableDefinitionStatement
+    | const_variable_definition_statement # ConstVariableDefinitionStatement;
 
 return_statement:
     'return' const_expression ';' # ReturnConstExpressionStatement
@@ -25,6 +26,13 @@ single_variable_definition:
     IDENTIFIER                        # NoInitializeVariableDefinition
     | IDENTIFIER '=' const_expression # ConstExpressionInitializeVariableDefinition
     | IDENTIFIER '=' expression       # ExpressionInitializeVariableDefinition;
+
+const_variable_definition_statement:
+    (('const' variable_type) | (variable_type 'const')) single_const_variable_definition (',' single_const_variable_definition)* ';';
+
+single_const_variable_definition:
+    IDENTIFIER '=' const_expression   # ConstExpressionInitializeConstVariableDefinition
+    | IDENTIFIER '=' expression       # ExpressionInitializeConstVariableDefinition;
 
 const_expression:
     (op = '+' | op = '-') const_expression                                           # UnaryConstExpression

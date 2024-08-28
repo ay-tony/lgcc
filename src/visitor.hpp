@@ -181,7 +181,7 @@ public:
       auto [name, val] = std::any_cast<std::tuple<std::string, std::any>>(visit(child));
 
       auto ir_cnt = m_ir_cnt++;
-      m_current_scope->insert_variable(name, variable_t(ir_cnt, type));
+      m_current_scope->insert_variable(name, variable_t(ir_cnt, type, false));
       pl("%{} = alloca {}", ir_cnt, type_name);
 
       if (val.has_value()) {
@@ -220,6 +220,52 @@ public:
   }
 
   std::any visitExpressionInitializeVariableDefinition(lgccParser::ExpressionInitializeVariableDefinitionContext *ctx) override {
+    std::string name{std::any_cast<std::string>(visit(ctx->IDENTIFIER()))};
+    auto val = std::any_cast<expression_t>(visit(ctx->expression()));
+    return std::tuple<std::string, std::any>{name, val};
+  }
+
+  std::any visitConst_variable_definition_statement(lgccParser::Const_variable_definition_statementContext *ctx) override {
+    auto raw_type_name = std::any_cast<std::string>(visit(ctx->variable_type()));
+    auto type = variable_t::to_type(raw_type_name);
+    auto type_name = variable_t::to_string(type);
+
+    for (auto child : ctx->single_const_variable_definition()) {
+      auto [name, val] = std::any_cast<std::tuple<std::string, std::any>>(visit(child));
+
+      auto ir_cnt = m_ir_cnt++;
+      m_current_scope->insert_variable(name, variable_t(ir_cnt, type, true));
+      pl("%{} = alloca {}", ir_cnt, type_name);
+
+      if (val.type() == typeid(expression_t)) {
+        auto [var_ir_cnt, var_type]{std::any_cast<expression_t>(val)};
+        if (var_type != type) {
+          auto converted_ir_cnt = m_ir_cnt++;
+          expression_conversion(var_type, var_ir_cnt, type, converted_ir_cnt);
+          var_ir_cnt = converted_ir_cnt;
+        }
+        pl("store {} %{}, ptr %{}", type_name, var_ir_cnt, ir_cnt);
+      } else if (val.type() == typeid(const_expression_t)) {
+        auto [var_val, var_type]{std::any_cast<const_expression_t>(val)};
+        if (var_type != type)
+          var_val = const_expression_conversion(var_type, var_val, type);
+        auto var_val_str = to_string(var_val);
+        pl("store {} {}, ptr %{}", type_name, var_val_str, ir_cnt);
+      }
+    }
+
+    return defaultResult();
+  }
+
+  std::any visitConstExpressionInitializeConstVariableDefinition(
+      lgccParser::ConstExpressionInitializeConstVariableDefinitionContext *ctx) override {
+    std::string name{std::any_cast<std::string>(visit(ctx->IDENTIFIER()))};
+    auto val = std::any_cast<const_expression_t>(visit(ctx->const_expression()));
+    return std::tuple<std::string, std::any>{name, val};
+  }
+
+  std::any
+  visitExpressionInitializeConstVariableDefinition(lgccParser::ExpressionInitializeConstVariableDefinitionContext *ctx) override {
     std::string name{std::any_cast<std::string>(visit(ctx->IDENTIFIER()))};
     auto val = std::any_cast<expression_t>(visit(ctx->expression()));
     return std::tuple<std::string, std::any>{name, val};
@@ -397,8 +443,8 @@ public:
 
   std::any visitIdentifierExpression(lgccParser::IdentifierExpressionContext *ctx) override {
     auto symbol = m_current_scope->resolve_variable(std::any_cast<std::string>(visit(ctx->IDENTIFIER())));
-    auto ir_cnt = symbol.get_ir_cnt();
-    auto type = symbol.get_type();
+    auto ir_cnt = symbol.ir_cnt();
+    auto type = symbol.type();
     auto cur_ir_cnt = m_ir_cnt++;
 
     switch (type) {
