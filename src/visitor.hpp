@@ -271,6 +271,31 @@ public:
     return std::tuple<std::string, std::any>{name, val};
   }
 
+  std::any visitAssignment_statement(lgccParser::Assignment_statementContext *ctx) override {
+    auto val_name{std::any_cast<std::string>(visit(ctx->left_value()))};
+    auto [expression_ir_cnt, expression_type]{std::any_cast<expression_t>(visit(ctx->expression()))};
+    auto val_type{m_current_scope->resolve_variable(val_name).type()};
+
+    auto new_ir_cnt{expression_ir_cnt};
+    if (val_type != expression_type) {
+      new_ir_cnt = m_ir_cnt++;
+      expression_conversion(expression_type, expression_ir_cnt, val_type, new_ir_cnt);
+    }
+
+    auto val_type_name{variable_t::to_string(val_type)};
+    auto val_ir_cnt{m_current_scope->resolve_variable(val_name).ir_cnt()};
+    pl("store {} %{}, ptr %{}", val_type_name, new_ir_cnt, val_ir_cnt);
+
+    return defaultResult();
+  }
+
+  std::any visitLeft_value(lgccParser::Left_valueContext *ctx) override {
+    std::string val_name{std::any_cast<std::string>(visit(ctx->IDENTIFIER()))};
+    if (m_current_scope->resolve_variable(val_name).is_const())
+      throw; // TODO
+    return val_name;
+  }
+
   std::any visitUnaryConstExpression(lgccParser::UnaryConstExpressionContext *ctx) override {
     if (ctx->op->getText() == "+")
       return visit(ctx->const_expression());
@@ -435,7 +460,7 @@ public:
 
     case variable_t::TYPE::FLOAT: {
       auto float_val = std::any_cast<float>(val);
-      pl("%{} = fadd float 0.0, {}", ir_cnt, float_val);
+      pl("%{} = fadd float 0.0, {:e}", ir_cnt, float_val);
     } break;
     }
     return expression_t(ir_cnt, type);

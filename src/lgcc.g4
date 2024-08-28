@@ -11,7 +11,8 @@ block: '{' statement* '}';
 statement:
     return_statement                      # ReturnStatement
     | variable_definition_statement       # VariableDefinitionStatement
-    | const_variable_definition_statement # ConstVariableDefinitionStatement;
+    | const_variable_definition_statement # ConstVariableDefinitionStatement
+    | assignment_statement                # AssignmentStatement;
 
 return_statement:
     'return' const_expression ';' # ReturnConstExpressionStatement
@@ -33,6 +34,12 @@ const_variable_definition_statement:
 single_const_variable_definition:
     IDENTIFIER '=' const_expression   # ConstExpressionInitializeConstVariableDefinition
     | IDENTIFIER '=' expression       # ExpressionInitializeConstVariableDefinition;
+
+assignment_statement:
+    left_value '=' expression ';';
+
+left_value:
+    IDENTIFIER;
 
 const_expression:
     (op = '+' | op = '-') const_expression                                           # UnaryConstExpression
