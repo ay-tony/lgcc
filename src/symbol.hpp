@@ -1,7 +1,6 @@
 #ifndef SYMBOL_HPP
 #define SYMBOL_HPP
 
-#include <any>
 #include <concepts>
 #include <map>
 #include <memory>
@@ -40,6 +39,7 @@ private:
 
 public:
   variable_t(std::uint32_t ir_cnt, TYPE type, bool isconst) : m_ir_cnt(ir_cnt), m_type(type), m_isconst(isconst) {}
+  variable_t(const variable_t &func) = default;
 
   ir_cnt_t ir_cnt() const { return m_ir_cnt; }
   TYPE type() const { return m_type; }
@@ -89,6 +89,7 @@ private:
 
 public:
   function_t(TYPE return_type) : m_return_type(return_type) {}
+  function_t(const function_t &func) = default;
 
   TYPE get_return_type() const { return m_return_type; }
 };
@@ -97,41 +98,36 @@ class scope_t {
 private:
   std::map<std::string, std::unique_ptr<variable_t>> variable_table;
   std::map<std::string, std::unique_ptr<function_t>> function_table;
-  scope_t *m_father{nullptr};
 
 public:
-  scope_t(scope_t *father = nullptr) : m_father(father) {}
+  scope_t() {}
 
   template <class T>
     requires std::derived_from<T, variable_t>
   void insert_variable(const std::string &name, const T &sym) {
     if (variable_table.contains(name))
-      throw false; // TODO: 规范抛出异常
-    variable_table.emplace(name, new T(sym));
+      throw "failed to insert variable"; // TODO: 规范抛出异常
+    variable_table.emplace(name, std::make_unique<T>(sym));
   }
 
-  const variable_t &resolve_variable(const std::string &name) {
+  std::optional<variable_t> resolve_variable(const std::string &name) {
     if (auto it = variable_table.find(name); it != variable_table.end())
       return *(it->second);
-    if (m_father)
-      return m_father->resolve_variable(name);
-    throw; // TODO: 规范抛出异常
+    return std::nullopt;
   }
 
   template <class T>
     requires std::derived_from<T, function_t>
   void insert_function(const std::string &name, const T &sym) {
     if (function_table.contains(name))
-      throw; // TODO: 规范抛出异常
-    function_table.emplace(name, new T(sym));
+      throw "failed to insert function"; // TODO: 规范抛出异常
+    function_table.emplace(name, std::make_unique<T>(sym));
   }
 
-  const function_t &resolve_function(const std::string &name) {
+  std::optional<function_t> resolve_function(const std::string &name) {
     if (auto it = function_table.find(name); it != function_table.end())
       return *(it->second);
-    if (m_father)
-      return m_father->resolve_function(name);
-    throw; // TODO: 规范抛出异常
+    return std::nullopt;
   }
 };
 

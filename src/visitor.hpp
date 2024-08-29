@@ -5,7 +5,9 @@
 #include <cstddef>
 #include <cstdint>
 #include <format>
+#include <functional>
 #include <ostream>
+#include <ranges>
 #include <string>
 #include <typeinfo>
 
@@ -22,9 +24,37 @@ class visitor_t : public lgccBaseVisitor {
 private:
   size_t m_indent{};
   std::ofstream m_outfile;
-  std::unique_ptr<scope_t> m_current_scope{new scope_t};
+  std::vector<scope_t> m_scopes{1};
   std::optional<std::string> m_current_function_name;
   variable_t::ir_cnt_t m_ir_cnt{1};
+
+  scope_t &current_scope() { return m_scopes.back(); }
+
+  variable_t resolve_variable(const std::string &name) {
+    for (auto &scope : m_scopes | std::ranges::views::reverse)
+      if (auto ret = scope.resolve_variable(name))
+        return ret.value();
+    throw "failed to resolve variable";
+  }
+
+  function_t resolve_function(const std::string &name) {
+    for (auto &scope : m_scopes | std::ranges::views::reverse)
+      if (auto ret = scope.resolve_function(name))
+        return ret.value();
+    throw "failed to resolve function";
+  }
+
+  template <class T>
+    requires std::derived_from<T, variable_t>
+  void insert_variable(const std::string &name, const T &sym) {
+    current_scope().insert_variable(name, sym);
+  }
+
+  template <class T>
+    requires std::derived_from<T, function_t>
+  void insert_function(const std::string &name, const T &sym) {
+    current_scope().insert_function(name, sym);
+  }
 
   void pd() {
     for (size_t i = 0; i < m_indent; i++)
@@ -119,14 +149,16 @@ public:
     auto raw_type_name{std::any_cast<std::string>(visit(ctx->function_type()))};
     auto type{function_t::to_type(raw_type_name)};
     auto type_name{function_t::to_string(type)};
-    auto id{std::any_cast<std::string>(visit(ctx->IDENTIFIER()))};
+    auto function_name{std::any_cast<std::string>(visit(ctx->IDENTIFIER()))};
 
-    m_current_function_name = id;
-    m_current_scope->insert_function(id, function_t(type));
+    m_current_function_name = function_name;
+    insert_function(function_name, function_t(type));
 
-    pd();
-    p("define {} @{}() ", type_name, id);
+    pl("define {} @{}() {{", type_name, function_name);
+    m_indent++;
     visit(ctx->block());
+    m_indent--;
+    pl("}}");
 
     m_current_function_name.reset();
     return defaultResult();
@@ -134,17 +166,15 @@ public:
 
   std::any visitBlock(lgccParser::BlockContext *ctx) override {
     // TODO: 添加符号表域
-    p("{{\n");
-    m_indent++;
+    m_scopes.push_back(scope_t());
     visitChildren(ctx);
-    m_indent--;
-    p("}}\n");
+    m_scopes.pop_back();
     return defaultResult();
   }
 
   std::any visitReturnExpressionStatement(lgccParser::ReturnExpressionStatementContext *ctx) override {
     auto [ir_cnt, type]{std::any_cast<expression_t>(visit(ctx->expression()))};
-    auto return_type{m_current_scope->resolve_function(m_current_function_name.value()).get_return_type()};
+    auto return_type{resolve_function(m_current_function_name.value()).get_return_type()};
     if (return_type != function_t::TYPE::VOID) {
       auto variable_type = function_t::to_variable_type(return_type);
       if (variable_type != type) {
@@ -160,7 +190,7 @@ public:
 
   std::any visitReturnConstExpressionStatement(lgccParser::ReturnConstExpressionStatementContext *ctx) override {
     auto [val, type]{std::any_cast<const_expression_t>(visit(ctx->const_expression()))};
-    auto return_type{m_current_scope->resolve_function(m_current_function_name.value()).get_return_type()};
+    auto return_type{resolve_function(m_current_function_name.value()).get_return_type()};
     if (return_type != function_t::TYPE::VOID) {
       auto cur_type = function_t::to_variable_type(return_type);
       if (cur_type != type)
@@ -181,7 +211,7 @@ public:
       auto [name, val] = std::any_cast<std::tuple<std::string, std::any>>(visit(child));
 
       auto ir_cnt = m_ir_cnt++;
-      m_current_scope->insert_variable(name, variable_t(ir_cnt, type, false));
+      insert_variable(name, variable_t(ir_cnt, type, false));
       pl("%{} = alloca {}", ir_cnt, type_name);
 
       if (val.has_value()) {
@@ -234,7 +264,7 @@ public:
       auto [name, val] = std::any_cast<std::tuple<std::string, std::any>>(visit(child));
 
       auto ir_cnt = m_ir_cnt++;
-      m_current_scope->insert_variable(name, variable_t(ir_cnt, type, true));
+      insert_variable(name, variable_t(ir_cnt, type, true));
       pl("%{} = alloca {}", ir_cnt, type_name);
 
       if (val.type() == typeid(expression_t)) {
@@ -274,7 +304,7 @@ public:
   std::any visitAssignment_statement(lgccParser::Assignment_statementContext *ctx) override {
     auto val_name{std::any_cast<std::string>(visit(ctx->left_value()))};
     auto [expression_ir_cnt, expression_type]{std::any_cast<expression_t>(visit(ctx->expression()))};
-    auto val_type{m_current_scope->resolve_variable(val_name).type()};
+    auto val_type{resolve_variable(val_name).type()};
 
     auto new_ir_cnt{expression_ir_cnt};
     if (val_type != expression_type) {
@@ -283,7 +313,7 @@ public:
     }
 
     auto val_type_name{variable_t::to_string(val_type)};
-    auto val_ir_cnt{m_current_scope->resolve_variable(val_name).ir_cnt()};
+    auto val_ir_cnt{resolve_variable(val_name).ir_cnt()};
     pl("store {} %{}, ptr %{}", val_type_name, new_ir_cnt, val_ir_cnt);
 
     return defaultResult();
@@ -291,7 +321,7 @@ public:
 
   std::any visitLeft_value(lgccParser::Left_valueContext *ctx) override {
     std::string val_name{std::any_cast<std::string>(visit(ctx->IDENTIFIER()))};
-    if (m_current_scope->resolve_variable(val_name).is_const())
+    if (resolve_variable(val_name).is_const())
       throw; // TODO
     return val_name;
   }
@@ -467,7 +497,7 @@ public:
   }
 
   std::any visitIdentifierExpression(lgccParser::IdentifierExpressionContext *ctx) override {
-    auto symbol = m_current_scope->resolve_variable(std::any_cast<std::string>(visit(ctx->IDENTIFIER())));
+    auto symbol = resolve_variable(std::any_cast<std::string>(visit(ctx->IDENTIFIER())));
     auto ir_cnt = symbol.ir_cnt();
     auto type = symbol.type();
     auto cur_ir_cnt = m_ir_cnt++;

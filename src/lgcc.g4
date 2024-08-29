@@ -12,7 +12,8 @@ statement:
     return_statement                      # ReturnStatement
     | variable_definition_statement       # VariableDefinitionStatement
     | const_variable_definition_statement # ConstVariableDefinitionStatement
-    | assignment_statement                # AssignmentStatement;
+    | assignment_statement                # AssignmentStatement
+    | block                               # BlockStatement;
 
 return_statement:
     'return' const_expression ';' # ReturnConstExpressionStatement

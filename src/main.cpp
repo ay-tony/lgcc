@@ -62,8 +62,13 @@ int main(int argc, char *argv[]) {
   lgcc_error_listener error_listener(source_file);
   parser.addErrorListener(&error_listener);
   antlr4::tree::ParseTree *tree = parser.program();
-  visitor_t visitor(out_file);
-  visitor.visit(tree);
+
+  try {
+    visitor_t visitor(out_file);
+    visitor.visit(tree);
+  } catch (const char *e) {
+    std::cout << e << '\n';
+  }
 
   return lexer.getNumberOfSyntaxErrors() + parser.getNumberOfSyntaxErrors();
 }
