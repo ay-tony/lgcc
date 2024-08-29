@@ -5,7 +5,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <format>
-#include <functional>
 #include <ostream>
 #include <ranges>
 #include <string>
@@ -61,11 +60,13 @@ private:
       m_outfile << "    ";
   }
 
-  template <class... Args> void p(std::format_string<Args...> fmt, Args &&...args) { m_outfile << std::format(fmt, args...); }
+  template <class... Args> void p(std::format_string<Args...> fmt, Args &&...args) {
+    m_outfile << std::format(fmt, std::forward<Args>(args)...);
+  }
 
   template <class... Args> void pl(std::format_string<Args...> fmt, Args &&...args) {
     pd();
-    p(fmt, args...);
+    p(fmt, std::forward<Args>(args)...);
     std::endl(m_outfile);
   }
 
@@ -84,7 +85,7 @@ private:
       return std::to_string(std::any_cast<std::int32_t>(val));
     else if (val.type() == typeid(float))
       return std::format("{:e}", std::any_cast<float>(val));
-    throw; // TODO
+    throw "some expression return a bad type"; // TODO
   }
 
   void expression_conversion(variable_t::TYPE from_type, variable_t::ir_cnt_t from_ir_cnt, variable_t::TYPE to_type,
@@ -377,8 +378,40 @@ public:
         return const_expression_t(std::any_cast<std::int32_t>(val1) / std::any_cast<std::int32_t>(val2), common_type);
       case '%':
         return const_expression_t(std::any_cast<std::int32_t>(val1) % std::any_cast<std::int32_t>(val2), common_type);
+      case '>':
+        switch (ctx->op->getText()[1]) {
+        case '=': // >=
+          return const_expression_t(
+              static_cast<std::int32_t>(std::any_cast<std::int32_t>(val1) >= std::any_cast<std::int32_t>(val2)),
+              variable_t::TYPE::INT32);
+        case '\0': // >
+          return const_expression_t(
+              static_cast<std::int32_t>(std::any_cast<std::int32_t>(val1) > std::any_cast<std::int32_t>(val2)),
+              variable_t::TYPE::INT32);
+        default:
+          throw "unrecognized binary operator";
+        }
+      case '<':
+        switch (ctx->op->getText()[1]) {
+        case '=': // <=
+          return const_expression_t(
+              static_cast<std::int32_t>(std::any_cast<std::int32_t>(val1) <= std::any_cast<std::int32_t>(val2)),
+              variable_t::TYPE::INT32);
+        case '\0': // <
+          return const_expression_t(
+              static_cast<std::int32_t>(std::any_cast<std::int32_t>(val1) < std::any_cast<std::int32_t>(val2)),
+              variable_t::TYPE::INT32);
+        default:
+          throw "unrecognized binary operator";
+        }
+      case '=': // ==
+        return const_expression_t(static_cast<std::int32_t>(std::any_cast<std::int32_t>(val1) == std::any_cast<std::int32_t>(val2)),
+                                  variable_t::TYPE::INT32);
+      case '!': // !=
+        return const_expression_t(static_cast<std::int32_t>(std::any_cast<std::int32_t>(val1) != std::any_cast<std::int32_t>(val2)),
+                                  variable_t::TYPE::INT32);
       default:
-        throw; // TODO
+        throw "unrecognized binary operator"; // TODO
       }
     case variable_t::TYPE::FLOAT:
       switch (ctx->op->getText()[0]) {
@@ -390,8 +423,36 @@ public:
         return const_expression_t(std::any_cast<float>(val1) * std::any_cast<float>(val2), common_type);
       case '/':
         return const_expression_t(std::any_cast<float>(val1) / std::any_cast<float>(val2), common_type);
+      case '>':
+        switch (ctx->op->getText()[1]) {
+        case '=':
+          return const_expression_t(static_cast<std::int32_t>(std::any_cast<float>(val1) >= std::any_cast<float>(val2)),
+                                    variable_t::TYPE::INT32);
+        case '\0':
+          return const_expression_t(static_cast<std::int32_t>(std::any_cast<float>(val1) > std::any_cast<float>(val2)),
+                                    variable_t::TYPE::INT32);
+        default:
+          throw "unrecognized binary operator";
+        }
+      case '<':
+        switch (ctx->op->getText()[1]) {
+        case '=':
+          return const_expression_t(static_cast<std::int32_t>(std::any_cast<float>(val1) <= std::any_cast<float>(val2)),
+                                    variable_t::TYPE::INT32);
+        case '\0':
+          return const_expression_t(static_cast<std::int32_t>(std::any_cast<float>(val1) < std::any_cast<float>(val2)),
+                                    variable_t::TYPE::INT32);
+        default:
+          throw "unrecognized binary operator";
+        }
+      case '=': // ==
+        return const_expression_t(static_cast<std::int32_t>(std::any_cast<float>(val1) == std::any_cast<float>(val2)),
+                                  variable_t::TYPE::INT32);
+      case '!': // !=
+        return const_expression_t(static_cast<std::int32_t>(std::any_cast<float>(val1) != std::any_cast<float>(val2)),
+                                  variable_t::TYPE::INT32);
       default:
-        throw; // TODO
+        throw "unrecognized binary operator"; // TODO
       }
     }
   }
@@ -449,10 +510,59 @@ public:
       case '%':
         pl("%{} = srem i32 %{}, %{}", cur_ir_cnt, new_ir_cnt1, new_ir_cnt2);
         break;
+      case '>':
+        switch (ctx->op->getText()[1]) {
+        case '=': // >=
+          pl("%{} = icmp sge i32 %{}, %{}", cur_ir_cnt, new_ir_cnt1, new_ir_cnt2);
+          pl("%{} = sext i1 %{} to i32", cur_ir_cnt + 1, cur_ir_cnt);
+          cur_ir_cnt = m_ir_cnt++;
+          common_type = variable_t::TYPE::INT32;
+          break;
+        case '\0': // >
+          pl("%{} = icmp sgt i32 %{}, %{}", cur_ir_cnt, new_ir_cnt1, new_ir_cnt2);
+          pl("%{} = sext i1 %{} to i32", cur_ir_cnt + 1, cur_ir_cnt);
+          cur_ir_cnt = m_ir_cnt++;
+          common_type = variable_t::TYPE::INT32;
+          break;
+        default:
+          throw "unrecognized binary operator";
+        }
+        break;
+      case '<':
+        switch (ctx->op->getText()[1]) {
+        case '=': // <=
+          pl("%{} = icmp sle i32 %{}, %{}", cur_ir_cnt, new_ir_cnt1, new_ir_cnt2);
+          pl("%{} = sext i1 %{} to i32", cur_ir_cnt + 1, cur_ir_cnt);
+          cur_ir_cnt = m_ir_cnt++;
+          common_type = variable_t::TYPE::INT32;
+          break;
+        case '\0': // <
+          pl("%{} = icmp slt i32 %{}, %{}", cur_ir_cnt, new_ir_cnt1, new_ir_cnt2);
+          pl("%{} = sext i1 %{} to i32", cur_ir_cnt + 1, cur_ir_cnt);
+          cur_ir_cnt = m_ir_cnt++;
+          common_type = variable_t::TYPE::INT32;
+          break;
+        default:
+          throw "unrecognized binary operator";
+        }
+        break;
+      case '=': // ==
+        pl("%{} = icmp eq i32 %{}, %{}", cur_ir_cnt, new_ir_cnt1, new_ir_cnt2);
+        pl("%{} = sext i1 %{} to i32", cur_ir_cnt + 1, cur_ir_cnt);
+        cur_ir_cnt = m_ir_cnt++;
+        common_type = variable_t::TYPE::INT32;
+        break;
+      case '!': // !=
+        pl("%{} = icmp ne i32 %{}, %{}", cur_ir_cnt, new_ir_cnt1, new_ir_cnt2);
+        pl("%{} = sext i1 %{} to i32", cur_ir_cnt + 1, cur_ir_cnt);
+        cur_ir_cnt = m_ir_cnt++;
+        common_type = variable_t::TYPE::INT32;
+        break;
       default:
-        throw; // TODO: 规范化错误处理
+        throw "unrecognized binary operator"; // TODO: 规范化错误处理
       }
       break;
+
     case variable_t::TYPE::FLOAT:
       switch (ctx->op->getText()[0]) {
       case '+':
@@ -467,8 +577,56 @@ public:
       case '/':
         pl("%{} = fdiv float %{}, %{}", cur_ir_cnt, new_ir_cnt1, new_ir_cnt2);
         break;
+      case '>':
+        switch (ctx->op->getText()[1]) {
+        case '=': // >=
+          pl("%{} = fcmp oge float %{}, %{}", cur_ir_cnt, new_ir_cnt1, new_ir_cnt2);
+          pl("%{} = sext i1 %{} to i32", cur_ir_cnt + 1, cur_ir_cnt);
+          cur_ir_cnt = m_ir_cnt++;
+          common_type = variable_t::TYPE::INT32;
+          break;
+        case '\0': // >
+          pl("%{} = fcmp ogt float %{}, %{}", cur_ir_cnt, new_ir_cnt1, new_ir_cnt2);
+          pl("%{} = sext i1 %{} to i32", cur_ir_cnt + 1, cur_ir_cnt);
+          cur_ir_cnt = m_ir_cnt++;
+          common_type = variable_t::TYPE::INT32;
+          break;
+        default:
+          throw "unrecognized binary operator";
+        }
+        break;
+      case '<':
+        switch (ctx->op->getText()[1]) {
+        case '=': // <=
+          pl("%{} = fcmp ole float %{}, %{}", cur_ir_cnt, new_ir_cnt1, new_ir_cnt2);
+          pl("%{} = sext i1 %{} to i32", cur_ir_cnt + 1, cur_ir_cnt);
+          cur_ir_cnt = m_ir_cnt++;
+          common_type = variable_t::TYPE::INT32;
+          break;
+        case '\0': // <
+          pl("%{} = fcmp olt float %{}, %{}", cur_ir_cnt, new_ir_cnt1, new_ir_cnt2);
+          pl("%{} = sext i1 %{} to i32", cur_ir_cnt + 1, cur_ir_cnt);
+          cur_ir_cnt = m_ir_cnt++;
+          common_type = variable_t::TYPE::INT32;
+          break;
+        default:
+          throw "unrecognized binary operator";
+        }
+        break;
+      case '=': // ==
+        pl("%{} = fcmp oeq float %{}, %{}", cur_ir_cnt, new_ir_cnt1, new_ir_cnt2);
+        pl("%{} = sext i1 %{} to i32", cur_ir_cnt + 1, cur_ir_cnt);
+        cur_ir_cnt = m_ir_cnt++;
+        common_type = variable_t::TYPE::INT32;
+        break;
+      case '!': // !=
+        pl("%{} = fcmp one float %{}, %{}", cur_ir_cnt, new_ir_cnt1, new_ir_cnt2);
+        pl("%{} = sext i1 %{} to i32", cur_ir_cnt + 1, cur_ir_cnt);
+        cur_ir_cnt = m_ir_cnt++;
+        common_type = variable_t::TYPE::INT32;
+        break;
       default:
-        throw; // TODO: 规范化错误处理
+        throw "unrecognized binary operator"; // TODO: 规范化错误处理
       }
       break;
     }

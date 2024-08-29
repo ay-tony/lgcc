@@ -46,6 +46,8 @@ const_expression:
     (op = '+' | op = '-') const_expression                                           # UnaryConstExpression
     | lhs = const_expression (op = '*' | op = '/' | op = '%') rhs = const_expression # BinaryConstExpression
     | lhs = const_expression (op = '+' | op = '-') rhs = const_expression            # BinaryConstExpression
+    | lhs = const_expression (op = '<' | op = '<=' | op = '>' | op = '>=') rhs = const_expression # BinaryConstExpression
+    | lhs = const_expression (op = '==' | op = '!=') rhs = const_expression          # BinaryConstExpression
     | '(' const_expression ')'                                                       # BraceConstExpression
     | LITERAL_INTEGER                                                                # IntegerConstExpression
     | LITERAL_FLOAT                                                                  # FloatConstExpression;
@@ -54,6 +56,8 @@ expression:
     (op = '+' | op = '-') expression                                     # UnaryExpression
     | lhs = expression (op = '*' | op = '/' | op = '%') rhs = expression # BinaryExpression
     | lhs = expression (op = '+' | op = '-') rhs = expression            # BinaryExpression
+    | lhs = expression (op = '<' | op = '<=' | op = '>' | op = '>=') rhs = expression # BinaryExpression
+    | lhs = expression (op = '==' | op = '!=') rhs = expression          # BinaryExpression
     | '(' expression ')'                                                 # BraceExpression
     | const_expression                                                   # ConstExpressionExpression
     | IDENTIFIER                                                         # IdentifierExpression;
