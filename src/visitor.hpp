@@ -204,7 +204,7 @@ public:
   }
 
   std::any visitVariable_definition_statement(lgccParser::Variable_definition_statementContext *ctx) override {
-    auto raw_type_name = std::any_cast<std::string>(visit(ctx->variable_type()));
+    auto raw_type_name = std::any_cast<std::string>(visit(ctx->arithmetic_type()));
     auto type = variable_t::to_type(raw_type_name);
     auto type_name = variable_t::to_string(type);
 
@@ -257,7 +257,7 @@ public:
   }
 
   std::any visitConst_variable_definition_statement(lgccParser::Const_variable_definition_statementContext *ctx) override {
-    auto raw_type_name = std::any_cast<std::string>(visit(ctx->variable_type()));
+    auto raw_type_name = std::any_cast<std::string>(visit(ctx->arithmetic_type()));
     auto type = variable_t::to_type(raw_type_name);
     auto type_name = variable_t::to_string(type);
 
